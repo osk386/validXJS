@@ -6,24 +6,34 @@
  */
 
 // Properties
-var properties = {
+
+var globalProperties = {
+
     'errorMessageRegex': "Incorrect text pattern.",
     'errorMessageDate': "Wrong date value.",
     'errorMessageTime': "Wrong time value.",
     'errorMessageNumeric': "Non numeric value.",
     'errorMessageAlphaNumeric': "Non alphanumeric value.",
-    'errorMessageText': "Text error."
+    'errorMessageAlpha': "Only letters admitted.",
+    'errorMessageText': "Text error.",
+    'errorMessageLengthMin': "Value size is shorter than specified.",
+    'errorMessageLengthMax': "Value size is longer than specified.",
+    'errorMessageDefinedValue': "Value not admitted.",
+    'errorMessageAcceptNull': "Null value is not accepted.",
+    'errorMessageLessThan': "Value can't be less than entered",
+    'errorMessageGreaterThan': "Value can't be greater than entered"
+
 };
 
 
 /**
  * Set initial parameters from an ojject
- * @param objProperties Object with properties
+ * @param objProperties Object with globalProperties
  */
 function validXJS(objProperties) {
     if (objProperties != null) {
         for (var prop in objProperties.properties) {
-            properties[prop] = objProperties.properties[prop];
+            globalProperties[prop] = objProperties.properties[prop];
         }
 
     }
@@ -31,196 +41,351 @@ function validXJS(objProperties) {
 
 /**
  * Set initial parameters from a JSON string
- * @param strJASONProperties String with properties in json format
+ * @param strJASONProperties String with globalProperties in json format
  */
 function validXJSON(strJASONProperties) {
 
     if (strJASONProperties != null) {
         var props = JSON.parse(strJASONProperties);
         for (var prop in props.properties) {
-            properties[prop] = props.properties[prop];
+            globalProperties[prop] = props.properties[prop];
         }
 
     }
 }
 
+
 /**
- * Add validator to String type
- * @param object
- * @returns {Array} List of errors
+ * Add validator to String type.
+ * @param object with parameters to validate.
+ * @returns {Array} List of errors.
  */
-String.prototype.validate = function (object) {
+if (String.prototype.validate == null) String.prototype.validate = function () {
 
-    // Store error messages in a list
+    var result = true;
+    // Variable to store error messages in a list
     var errorList = [];
+    // Set local properties
+    var property = {};
 
-    // Iterate over each validation type to
-    for (var i in arguments) {
-        var validation = arguments[i];
-        var lmaxS = null;
-        var lmin = null;
-        var lmax = null;
-        var dec = null;
-        var regex = null;
-
-        switch (validation.type) {
-            // For regular expression validation
-            case "regex":
-                regex = new RegExp(validation.valor);
-                if (!this.match(regex)) {
-                    if (validation.msg != null)
-                        errorList.push([validation.msg, this]);
-                    else
-                        errorList.push([properties.errorMessageRegex, this]);
-
-                }
-
-                break;
-
-
-            // For numeric validation
-            case "numeric":
-                lmaxS = validation.longmax ? validation.longmax : '';
-                lmin = validation.longmin != null ? validation.longmin : 1;
-                lmax = validation.longmax ? validation.longmax : 30;
-                dec = validation.decimal ? '(\\.[0-9]{1,' + validation.decimal + '})?' : '';
-                regex = new RegExp('^[0-9]{' + lmin + ',' + lmax + '}' + dec + '$');
-                if (!this.match(regex)) {
-                    if (validation.msg != null)
-                        errorList.push([validation.msg, this]);
-                    else
-                        errorList.push([properties.errorMessageNumeric, this]);
-
-                }
-                break;
-
-
-            // For alphanumeric validation
-            case "alphanumeric":
-                lmaxS = validation.longmax ? validation.longmax : '';
-                lmin = validation.longmin != null ? validation.longmin : 1;
-                lmax = validation.longmax ? validation.longmax : 30;
-                regex = new RegExp('^[0-9a-zA-Z]{' + lmin + ',' + lmax + '}' + dec + '$');
-                if (!this.match(regex)) {
-                    if (validation.msg != null)
-                        errorList.push([validation.msg, this]);
-                    else
-                        errorList.push([properties.errorMessageAlphaNumeric, this]);
-
-
-                }
-                break;
-
-            // For text validation
-            case "text":
-                lmaxS = validation.longmax ? validation.longmax : '';
-                lmin = validation.longmin != null ? validation.longmin : 1;
-                lmax = validation.longmax ? validation.longmax : 8000;
-
-                if (this.length < lmin || this.length > lmax) {
-                    if (validation.msg != null)
-                        errorList.push([validation.msg, thisS]);
-                    else
-                        errorList.push([properties.errorMessageText, this]);
-
-                }
-                break;
-
-            // For date validation
-            case "date":
-
-                if (validation.format != null) {
-                    var is_chrome = window.chrome;
-                    var dayInMilisecs = 0;
-                    var datePart = null;
-                    var dateComp = null;
-                    var dateMsecs = null;
-                    var altDate = null;
-                    var valiDate = null;
-                    var dateStr = null;
-                    switch (validation.format) {
-
-                        case "YYYY-MM-DD":
-                        {
-                            datePart = this.split('-');
-                            dateComp = parseInt(datePart[0]) + "-" + parseInt(datePart[1]) + "-" + parseInt(datePart[2]);
-                            if (is_chrome) {
-                                dateStr = dateComp;
-                            }
-                            else {
-                                dateStr = datePart[0] + "-" + datePart[1] + "-" + datePart[2];
-                                dayInMilisecs = 86400000;
-                            }
-                        }
-                            break;
-
-
-                        case "YYYY/MM/DD":
-                        {
-                            datePart = this.split('/');
-                            dateComp = parseInt(datePart[0]) + "-" + parseInt(datePart[1]) + "-" + parseInt(datePart[2]);
-                            if (is_chrome) {
-                                dateStr = dateComp;
-                            }
-                            else {
-                                dateStr = datePart[0] + "-" + datePart[1] + "-" + datePart[2];
-                                dayInMilisecs = 86400000;
-                            }
-                        }
-                            break;
-
-
-                        case "MM/DD/YYYY":
-                        {
-                            datePart = this.split('/');
-                            dateComp = parseInt(datePart[2]) + "-" + parseInt(datePart[0]) + "-" + parseInt(datePart[1]);
-                            if (is_chrome) {
-                                dateStr = dateComp;
-                            }
-                            else {
-                                dateStr = datePart[2] + "-" + datePart[0] + "-" + datePart[1];
-                                dayInMilisecs = 86400000;
-                            }
-                        }
-                            break;
-
-
-                        case "DD/MM/YYYY":
-                        {
-                            datePart = this.split('/');
-                            dateComp = parseInt(datePart[2]) + "-" + parseInt(datePart[1]) + "-" + parseInt(datePart[0]);
-                            if (is_chrome) {
-                                dateStr = dateComp;
-                            }
-                            else {
-                                dateStr = datePart[2] + "-" + datePart[1] + "-" + datePart[0];
-                                dayInMilisecs = 86400000;
-                            }
-                        }
-                            break;
-                    }
-
-                    dateMsecs = Date.parse(dateStr) + dayInMilisecs;
-                    altDate = new Date(dateMsecs);
-                    valiDate = altDate.getFullYear() + "-" + (altDate.getMonth() + 1) + "-" + altDate.getDate();
-
-                    if (dateComp != valiDate) {
-
-                        if (validation.msg != null)
-                            errorList.push([validation.msg, this]);
-                        else
-                            errorList.push([properties.errorMessageDate, this]);
-
-                    }
-
-                }
-                break;
-        }
+    for (var err in globalProperties) {
+        property[err] = globalProperties[err];
     }
-    return errorList;
+
+    // Declaration variable accept decimal
+    var dec = '';
+
+
+    if (this != "" && this != null) {
+
+        errorList = [];
+
+        // Iterate over each validation type to
+        for (var i in arguments) {
+            var validation = arguments[i];
+
+
+            switch (validation.type) {
+
+
+                // For regular expression validation
+                case "regex":
+
+                    regex = new RegExp(validation.value);
+                    if (!this.match(regex)) {
+                        if (validation.msg != null) {
+                            result = false;
+                            errorList.push(validation.msg, this);
+                        }
+                        else {
+                            result = false;
+                            errorList.push(property.errorMessageRegex, this);
+                        }
+
+                    }
+
+                    break;
+
+
+
+
+                // For numeric validation
+                case "numeric":
+
+                    dec = validation.decimal ? '(\\.[0-9]{1,' + validation.decimal + '})?' : '';
+
+                    regex = new RegExp('^[0-9' + validation.chars + ']*' + dec + '$');
+                    if (!this.match(regex)) {
+
+                        if (validation.msg != null) {
+                            result = false;
+                            errorList.push(validation.msg, this);
+                        }
+                        else {
+                            result = false;
+                            errorList.push(property.errorMessageNumeric, this);
+                        }
+
+                    }
+                    break;
+
+
+                // For alphanumeric validation
+                case "alphanumeric":
+                    regex = new RegExp('^[0-9a-zA-Z' + validation.chars + ']*$');
+                    if (!this.match(regex)) {
+                        if (validation.msg != null) {
+                            result = false;
+                            errorList.push(validation.msg, this);
+                        }
+                        else {
+                            result = false;
+                            errorList.push(property.errorMessageAlphaNumeric, this);
+                        }
+
+
+                    }
+                    break;
+
+                // For just letters validation
+                case "alpha":
+
+                    regex = new RegExp('^[a-zA-Z' + validation.chars + ']*$');
+                    if (!this.match(regex)) {
+                        if (validation.msg != null) {
+                            result = false;
+
+                            errorList.push(validation.msg, this);
+                        }
+                        else {
+                            result = false;
+
+                            errorList.push(property.errorMessageAlpha, this);
+                        }
+
+
+                    }
+                    break;
+
+                // For text validation
+                case "text":
+                    if (this.length < validation.lmin || this.length > validation.lmax) {
+                        if (validation.msg != null) {
+                            result = false;
+                            errorList.push(validation.msg, this);
+                        }
+                        else {
+                            result = false;
+                            errorList.push(property.errorMessageText, this);
+                        }
+
+                    }
+                    break;
+
+                // For date validation
+                // input string format of date
+                case "date":
+
+                    if (validation.format != null) {
+                        var is_chrome = window.chrome;
+                        var dayInMilisecs = 0;
+                        var datePart = null;
+                        var dateComp = null;
+                        var dateFinal = null;
+                        var valiDate = null;
+                        var dateStr = null;
+                        var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                        var indexMonth = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
+
+                        switch (validation.format) {
+
+                            case "YYYY-MM-DD":
+                            {
+                                datePart = this.split('-');
+                                dateStr = months[parseInt(datePart[1]) - 1] + ' ' + parseInt(datePart[2]) + ', ' + parseInt(datePart[0]);
+                                dateComp = Date.parse(dateStr);
+                                dateFinal = new Date(dateComp);
+                                valiDate = dateFinal.getFullYear() + '-' + indexMonth[dateFinal.getMonth()] + '-' + (dateFinal.getDate().toString().length == 1 ? '0' + dateFinal.getDate() : dateFinal.getDate());
+                            }
+                                break;
+
+
+                            case "YYYY/MM/DD":
+                            {
+                                datePart = this.split('/');
+                                dateStr = months[parseInt(datePart[1]) - 1] + ' ' + parseInt(datePart[2]) + ', ' + parseInt(datePart[0]);
+                                dateComp = Date.parse(dateStr);
+                                dateFinal = new Date(dateComp);
+                                valiDate = dateFinal.getFullYear() + '/' + indexMonth[dateFinal.getMonth()] + '/' + (dateFinal.getDate().toString().length == 1 ? '0' + dateFinal.getDate() : dateFinal.getDate());
+                            }
+                                break;
+
+
+                            case "MM/DD/YYYY":
+                            {
+                                datePart = this.split('/');
+                                dateStr = months[parseInt(datePart[0]) - 1] + ' ' + parseInt(datePart[1]) + ', ' + parseInt(datePart[2]);
+                                dateComp = Date.parse(dateStr);
+                                dateFinal = new Date(dateComp);
+                                valiDate = indexMonth[dateFinal.getMonth()] + '/' +  (dateFinal.getDate().toString().length == 1 ? '0' + dateFinal.getDate() : dateFinal.getDate() + '/' + dateFinal.getFullYear());
+
+                            }
+                                break;
+
+
+                            case "DD/MM/YYYY":
+                            {
+                                datePart = this.split('/');
+                                dateStr = months[parseInt(datePart[1]) - 1] + ' ' + parseInt(datePart[0]) + ', ' + parseInt(datePart[2]);
+                                dateComp = Date.parse(dateStr);
+                                dateFinal = new Date(dateComp);
+                                valiDate =  (dateFinal.getDate().toString().length == 1 ? '0' + dateFinal.getDate() : dateFinal.getDate()  + '/' +indexMonth[dateFinal.getMonth()] + '/' + dateFinal.getFullYear());
+                            }
+                                break;
+
+                            case "YYYYMMDD":
+                            {
+                                var datePart1 = this.substr(0, 4);
+                                var datePart2 = this.substr(4, 2);
+                                var datePart3 = this.substr(6, 2);
+
+
+                                dateStr = months[parseInt(datePart2) - 1] + ' ' + parseInt(datePart3) + ', ' + parseInt(datePart1);
+                                dateComp = Date.parse(dateStr);
+                                dateFinal = new Date(dateComp);
+                                valiDate = dateFinal.getFullYear() + indexMonth[dateFinal.getMonth()] + (dateFinal.getDate().toString().length == 1 ? '0' + dateFinal.getDate() : dateFinal.getDate());
+
+
+                            }
+                                break;
+                        }
+
+
+                        if (this != valiDate) {
+
+                            if (validation.msg != null) {
+                                result = false;
+                                errorList.push(validation.msg, this);
+                            }
+                            else {
+                                result = false;
+                                errorList.push(property.errorMessageDate, this);
+                            }
+
+                        }
+
+                    }
+                    break;
+
+                // For defined values
+                // input string or array of strings
+                case "defined":
+
+                    if ((typeof validation.value) === "object") {
+
+                        var rightDefined = 0;
+                        for (var i in validation.value) {
+                            if (this == validation.value[i]) {
+                                rightDefined++;
+                            }
+                        }
+
+                        if (!rightDefined) {
+                            result = false;
+                            errorList.push(property.errorMessageDefinedValue, this);
+                        }
+                    }
+                    else {
+                        if (this != validation.value) {
+                            result = false;
+                            errorList.push(property.errorMessageDefinedValue, this);
+                        }
+                    }
+
+                    break;
+            }
+
+
+            // Set once a global property
+            for (var x in property) {
+                if (validation[x]) {
+                    property[x] = validation[x];
+                }
+            }
+
+            // ****************  Global validations  ********************************************
+
+
+            // Validate minimun length of string.
+            if (validation.lmin && this.length < validation.lmin) {
+
+                result = false;
+                errorList.push(property.errorMessageLengthMin, this);
+            }
+            // Validate maximun length of string
+            if (validation.lmax && this.length > validation.lmax) {
+
+                result = false;
+                errorList.push(property.errorMessageLengthMax, this);
+            }
+
+
+            // Validate that value cant be less than other
+            if ((typeof validation.notlt) === "object") {
+                for (var i in validation.notlt) {
+                    if (this < validation.notlt[i]) {
+
+
+                        result = false;
+                        errorList.push(property.errorMessageLessThan, this);
+                    }
+                }
+
+            } else {
+                if (this < validation.notlt) {
+                    result = false;
+                    errorList.push(property.errorMessageLessThan, this);
+                }
+            }
+
+            // Validate that value cant be greater than other
+            if ((typeof validation.notgt) === "object") {
+                for (var i in validation.notgt) {
+                    if (this > validation.notgt[i]) {
+
+
+                        result = false;
+                        errorList.push(property.errorMessageGreaterThan, this);
+                    }
+                }
+
+            } else {
+                if (this > validation.notgt) {
+                    result = false;
+                    errorList.push(property.errorMessageGreaterThan, this);
+                }
+            }
+
+
+        }
+
+    }
+    else {
+        for (var i in arguments) {
+            if (arguments[i].lmin > 0) {
+                result = false;
+                errorList.push(property.errorMessageAcceptNull, this);
+            }
+            else {
+
+            }
+
+        }
+
+
+    }
+
+    return [result, errorList];
 
 };
-
-
-
 
