@@ -11,4 +11,4 @@ Main function of string is validate, which is added to String() type through the
 Parameters
 ---
 
-validate(Object) || validate(JSON string)
+validate(Object) || validate(JSON string)?
